@@ -2,20 +2,13 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
-# Pull credentials safely from GitHub Secrets
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 SEEN_FILE = "seen_properties.txt"
 
 TARGET_URLS = [
-    # Rightmove: 6-bed Student Houses in Redland & Clifton
     "https://www.rightmove.co.uk/student-accommodation/find.html?searchType=STUDENT&locationIdentifier=REGION%5E93859&minBedrooms=6&maxBedrooms=6&propertyTypes=house",
-    
-    # OnTheMarket: 6-bed Student Lets in Redland/Clifton
-    "https://www.onthemarket.com/to-rent/student-properties/6-bed-houses/redland-bristol/",
-    
-    # Direct Agency Student Pages (e.g., Digs / The Letting Game 6-beds)
-    "https://www.bristoldigs.co.uk/properties?beds=6&area=Redland,Clifton"
+    "https://www.onthemarket.com/to-rent/student-properties/6-bed-houses/redland-bristol/"
 ]
 
 HEADERS = {
@@ -24,9 +17,14 @@ HEADERS = {
 }
 
 def send_alert(message):
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+        return
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"}
-    requests.post(url, json=payload)
+    try:
+        requests.post(url, json=payload, timeout=10)
+    except Exception as e:
+        print("Telegram send error:", e)
 
 def load_seen():
     if os.path.exists(SEEN_FILE):
@@ -51,25 +49,29 @@ def check_properties():
             for link in links:
                 href = link['href']
                 
-                if "/properties/" in href or "/details/" in href:
-                    full_url = href if href.startswith("http") else "https://www.rightmove.co.uk" + href
-                    property_id = href.split("/")[-1].split(".")[0]
-
-                    if property_id not in seen_ids and len(property_id) > 3:
-                        seen_ids.add(property_id)
+                # Strict URL path check to ignore navigation, footer, and menu links
+                if ("/properties/" in href or "/details/" in href) and not href.startswith("#"):
+                    
+                    # Ensure numeric property ID
+                    clean_id = href.split("/")[-1].split(".")[0].split("?")[0]
+                    
+                    if clean_id.isdigit() and len(clean_id) >= 6 and clean_id not in seen_ids:
+                        full_url = href if href.startswith("http") else "https://www.rightmove.co.uk" + href
+                        
+                        seen_ids.add(clean_id)
                         new_found = True
                         
                         message = f"🚨 *NEW 6-BED STUDENT HOUSE FOUND!*\n\n🔗 [View Listing]({full_url})"
                         send_alert(message)
-                        print(f"Alert sent for: {full_url}")
+                        print(f"Alert sent for property ID: {clean_id}")
 
         except Exception as e:
-            print(f"Error checking page: {e}")
+            print(f"Error checking page {url}: {e}")
 
     if new_found:
         save_seen(seen_ids)
     else:
-        print("Checked portals — no brand new 6-bed listings right now.")
+        print("Checked portals — no new listings right now.")
 
 if __name__ == "__main__":
     check_properties()
