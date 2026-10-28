@@ -8,8 +8,14 @@ TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 SEEN_FILE = "seen_properties.txt"
 
 TARGET_URLS = [
-    "https://www.rightmove.co.uk/property-to-rent/find.html?searchType=RENT&locationIdentifier=REGION%5E93859&minBedrooms=6&maxBedrooms=6&propertyTypes=house",
-    "https://www.onthemarket.com/to-rent/6-bed-houses/redland-bristol/"
+    # Rightmove: 6-bed Student Houses in Redland & Clifton
+    "https://www.rightmove.co.uk/student-accommodation/find.html?searchType=STUDENT&locationIdentifier=REGION%5E93859&minBedrooms=6&maxBedrooms=6&propertyTypes=house",
+    
+    # OnTheMarket: 6-bed Student Lets in Redland/Clifton
+    "https://www.onthemarket.com/to-rent/student-properties/6-bed-houses/redland-bristol/",
+    
+    # Direct Agency Student Pages (e.g., Digs / The Letting Game 6-beds)
+    "https://www.bristoldigs.co.uk/properties?beds=6&area=Redland,Clifton"
 ]
 
 HEADERS = {
