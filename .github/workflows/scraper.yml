@@ -4,7 +4,11 @@ on:
   schedule:
     # Runs automatically every 20 minutes, 24/7
     - cron: '*/20 * * * *'
-  workflow_dispatch: # Allows you to run it manually anytime
+  workflow_dispatch: # Allows manual trigger anytime
+
+# Explicitly give the workflow permission to write back updated seen lists
+permissions:
+  contents: write
 
 jobs:
   run-scraper:
