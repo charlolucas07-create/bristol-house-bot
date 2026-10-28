@@ -1,0 +1,36 @@
+name: House Search Scraper
+
+on:
+  schedule:
+    # Runs automatically every 20 minutes, 24/7
+    - cron: '*/20 * * * *'
+  workflow_dispatch: # Allows you to run it manually anytime
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo content
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Run Scraper
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python main.py
+
+      - name: Save updated seen list back to GitHub
+        run: |
+          git config --global user.name 'HouseBot'
+          git config --global user.email 'housebot@users.noreply.github.com'
+          git add seen_properties.txt || true
+          git commit -m "Update seen properties list" || exit 0
+          git push
