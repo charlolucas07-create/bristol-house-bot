@@ -2,11 +2,9 @@ name: House Search Scraper
 
 on:
   schedule:
-    # Runs automatically every 20 minutes, 24/7
     - cron: '*/20 * * * *'
-  workflow_dispatch: # Allows manual trigger anytime
+  workflow_dispatch:
 
-# Explicitly give the workflow permission to write back updated seen lists
 permissions:
   contents: write
 
@@ -36,5 +34,6 @@ jobs:
           git config --global user.name 'HouseBot'
           git config --global user.email 'housebot@users.noreply.github.com'
           git add seen_properties.txt || true
+          git pull --rebase origin main || true
           git commit -m "Update seen properties list" || exit 0
           git push
