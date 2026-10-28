@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Check out repo content
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -29,12 +31,8 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python main.py
 
-      - name: Save updated seen list back to GitHub
-        run: |
-          git config --global user.name 'HouseBot'
-          git config --global user.email 'housebot@users.noreply.github.com'
-          git fetch origin main
-          git reset --soft origin/main
-          git add seen_properties.txt || true
-          git commit -m "Update seen properties list" || exit 0
-          git push origin main
+      - name: Commit & Push updated seen list
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Update seen properties list [skip ci]"
+          file_pattern: 'seen_properties.txt'
