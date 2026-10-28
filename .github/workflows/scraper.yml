@@ -8,17 +8,19 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: run-scraper
+  cancel-in-progress: false
+
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo content
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }}
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.10'
 
@@ -32,7 +34,11 @@ jobs:
         run: python main.py
 
       - name: Commit & Push updated seen list
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "Update seen properties list [skip ci]"
-          file_pattern: 'seen_properties.txt'
+        run: |
+          git config user.name 'HouseBot'
+          git config user.email 'housebot@users.noreply.github.com'
+          git add seen_properties.txt
+          git diff --staged --quiet && echo "No changes to commit" && exit 0
+          git commit -m "Update seen properties list [skip ci]"
+          git pull --rebase origin main
+          git push
